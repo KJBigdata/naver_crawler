@@ -161,42 +161,24 @@ if __name__ == '__main__':
     engine = Crawler(start_date = '20190801', end_date='20200731')
     engine.run()
 
-'''
     files = np.array(glob.glob("./*.pkl"))
-    # press_doc = [[], [], [], [], [], [], [], [], [], [], []]
 
     category = {}
     for i, f in enumerate(files):
         with open(f, 'rb') as f:
             whole_doc = pickle.load(f)
             print(f.name, '기사 갯수', len(whole_doc))
-            if len(whole_doc) == 0 :
-                pass
-            else:
-            # for doc in whole_doc:
-            #     if len(doc['summary']) > 1:
-            #         press_doc[i].append(doc)
-            #     else:
-            #         pass
-                category_count = Counter([doc['category'] for doc in whole_doc])
-                summary_count = Counter([len(doc['summary']) for doc in whole_doc])
 
-                print("***summary_count : ", summary_count, "***category_count : ", category_count)
+            category_count = Counter([doc['category'] for doc in whole_doc])
+            summary_count = Counter([len(doc['summary']) for doc in whole_doc])
 
-                for doc in whole_doc[30:35]:
-                    print(doc['url'], doc['category'], doc['summary'], doc['content'])
-
-                print('\n')
-                for key, value in category_count.items():
-                    if key in list(category.keys()):
-                        category[key] += value
-                    else:
-                        category[key] = value
-    print(category)
+            print("*summary_count : ", summary_count)
+            print("*category_count : ", category_count)
+            print('\n')
+            for key, value in category_count.items():
+                if key in list(category.keys()):
+                    category[key] += value
+                else:
+                    category[key] = value
+    print("***All count of naver news by category: ",category)
     print(sum(category.values()))
-        # with open(f.name.split('.pkl')[0]+'_1.pkl', 'wb') as f:
-        #     pickle.dump(press_doc[i], f)
-'''
-
-
-
