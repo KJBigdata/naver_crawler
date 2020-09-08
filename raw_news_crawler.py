@@ -9,16 +9,17 @@ import numpy as np
 from multiprocessing import Pool
 from fake_useragent import UserAgent
 from collections import Counter
+from pathlib import Path
 
 class Crawler:
     def __init__(self, start_date = '20190801', end_date='20200731'):
         self.start_date = start_date
         self.end_date = end_date
         self.base_url = 'https://news.naver.com/main/list.nhn?mode=LPOD&mid=sec&listType=paper'
-        self.press_code = [{'018': '이데일리'}, {'277': '아시아경제'}, {'469': '한국일보'},
+        self.press_code = [{'014': '파이낸셜뉴스'}, {'018': '이데일리'}, {'277': '아시아경제'}, {'469': '한국일보'},
                            {'021': '문화일보'}, {'023': '조선일보'}, {'028': '한겨레'},
                            {'015': '한국경제'}, {'011': '서울경제'},
-                           {'014': '파이낸셜뉴스'}, {'016': '헤럴드경제'}, {'029': '디지털타임스'}]
+                           {'016': '헤럴드경제'}, {'029': '디지털타임스'}]
 
     def get_all_date(self):
         d1 = datetime.datetime.strptime(self.start_date, '%Y%m%d').date()
@@ -46,10 +47,11 @@ class Crawler:
         return res
 
     def sub_summary(self, text, summary=list):
+        text = text.replace("\xa0", ' ')
         sub_word = []
         for i, phrase in enumerate(summary):
             sub_word.append(text[:text.find(summary[i]) + len(summary[i])])
-            text = text[text.find(summary[i]) + len(summary[i]):].replace("\xa0", ' ')
+            text = text[text.find(summary[i]) + len(summary[i]):]
         print('substring_summary from full_text : ', sub_word)
         return text.strip()
 
@@ -165,9 +167,11 @@ if __name__ == '__main__':
 
     category = {}
     for i, f in enumerate(files):
+        file = f
         with open(f, 'rb') as f:
             whole_doc = pickle.load(f)
-            print(f.name, '기사 갯수', len(whole_doc))
+            press = f.name[2:].split('.')[0]
+            print(press, '기사 갯수', len(whole_doc), np.round(Path(file).stat().st_size / 1024000, 2), 'MB')
 
             category_count = Counter([doc['category'] for doc in whole_doc])
             summary_count = Counter([len(doc['summary']) for doc in whole_doc])
@@ -180,5 +184,5 @@ if __name__ == '__main__':
                     category[key] += value
                 else:
                     category[key] = value
-    print("***All count of naver news by category: ",category)
+    print("***All count of naver news by category: ", category)
     print(sum(category.values()))
