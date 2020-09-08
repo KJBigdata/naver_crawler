@@ -49,7 +49,7 @@ class Crawler:
         sub_word = []
         for i, phrase in enumerate(summary):
             sub_word.append(text[:text.find(summary[i]) + len(summary[i])])
-            text = text[text.find(summary[i]) + len(summary[i]):]
+            text = text[text.find(summary[i]) + len(summary[i]):].replace("\xa0", ' ')
         print('substring_summary from full_text : ', sub_word)
         return text.strip()
 
