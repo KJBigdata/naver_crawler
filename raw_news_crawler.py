@@ -9,7 +9,8 @@ import numpy as np
 from multiprocessing import Pool
 from fake_useragent import UserAgent
 from collections import Counter
-from pathlib import Path
+import os
+import argparse
 
 class Crawler:
     def __init__(self, start_date = '20190801', end_date='20200731'):
@@ -55,6 +56,13 @@ class Crawler:
         print('substring_summary from full_text : ', sub_word)
         return text.strip()
 
+    def remove_naver_pattern(self, text):
+        if text.find('이 기사는 언론사에서') == '-1':
+            return text
+        else:
+            text = text[:text.find('이 기사는 언론사에서')].strip()
+            return text
+
     def parse_url(self, title_url_pair=tuple):
         print(title_url_pair)
         title = title_url_pair[0]
@@ -73,6 +81,7 @@ class Crawler:
                     category = soup.find('em', attrs={'class': 'guide_categorization_item'}).text
                     content = soup.find("div", attrs={"id": "articleBody"}).text
                     content = self.sub_summary(content, summary)
+                    content = self.remove_naver_pattern(content)
 
                     doc = {'url': url, 'category' : category, 'title': title, 'summary' : summary, 'content': content}
                     keys = ['category', 'title', 'summary', 'url']
@@ -89,6 +98,8 @@ class Crawler:
                     category = soup.find('em', attrs={'class': 'guide_categorization_item'}).text
                     content = soup.find("div", attrs={"id": "articleBody"}).text
                     content = self.sub_summary(content, summary)
+                    content = self.remove_naver_pattern(content)
+
                     doc = {'url': url, 'category' : category, 'title': title, 'summary': summary, 'content': content}
                     keys = ['category', 'title', 'summary', 'url']
                     print('***', [doc.get(key) for key in keys], '***')
@@ -159,30 +170,47 @@ class Crawler:
                 pickle.dump(whole_docs, f1)
                 time.sleep(30)
 
-if __name__ == '__main__':
-    engine = Crawler(start_date = '20190801', end_date='20200731')
+    def show_stat(self):
+        files = np.array(glob.glob("./*.pkl"))
+
+        category = {}
+        size = 0
+        for i, f in enumerate(files):
+            file = f
+            with open(f, 'rb') as f:
+                whole_doc = pickle.load(f)
+                press = f.name[2:].split('.')[0]
+                print(press, '기사 갯수', len(whole_doc), np.round(os.stat(file).st_size / 1000000, 2), 'MB')
+                size += os.stat(file).st_size / 1000000
+
+                category_count = Counter([doc['category'] for doc in whole_doc])
+                summary_count = Counter([len(doc['summary']) for doc in whole_doc])
+
+                print("*summary_count : ", summary_count)
+                print("*category_count : ", category_count)
+                print('\n')
+                for key, value in category_count.items():
+                    if key in list(category.keys()):
+                        category[key] += value
+                    else:
+                        category[key] = value
+        print("***All count of naver news by category: ", category)
+        print('총 합계 : ', sum(category.values()), '개')
+        print('총 크기 : ', size, 'MB')
+
+def main():
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--start_date', type=str, required=True)
+    parser.add_argument('--end_date', type=str, required=True)
+    args = parser.parse_args()
+
+    START_DATE = args.start_date
+    END_DATE = args.end_date
+
+    engine = Crawler(start_date = START_DATE, end_date=END_DATE)
     engine.run()
+    engine.show_stat()
 
-    files = np.array(glob.glob("./*.pkl"))
 
-    category = {}
-    for i, f in enumerate(files):
-        file = f
-        with open(f, 'rb') as f:
-            whole_doc = pickle.load(f)
-            press = f.name[2:].split('.')[0]
-            print(press, '기사 갯수', len(whole_doc), np.round(Path(file).stat().st_size / 1024000, 2), 'MB')
-
-            category_count = Counter([doc['category'] for doc in whole_doc])
-            summary_count = Counter([len(doc['summary']) for doc in whole_doc])
-
-            print("*summary_count : ", summary_count)
-            print("*category_count : ", category_count)
-            print('\n')
-            for key, value in category_count.items():
-                if key in list(category.keys()):
-                    category[key] += value
-                else:
-                    category[key] = value
-    print("***All count of naver news by category: ", category)
-    print(sum(category.values()))
+if __name__ == '__main__':
+    main()
