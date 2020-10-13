@@ -29,7 +29,9 @@ class Crawler:
         return date_list
 
     def get_url_list(self, main_url):
-        main_url = requests.get(main_url)
+        ua = UserAgent()
+        headers = {'User-Agent': ua.random}
+        main_url = requests.get(main_url, headers=headers)
         soup = BeautifulSoup(main_url.text, "html.parser")
         title_url_pair_list = [(a.text.strip(), str(a).split('href="')[1].split('"')[0].replace('amp;','')) if a.find('img') is None
                                else (a.find('img').get('alt').strip(), str(a).split('href="')[1].split('"')[0].replace('amp;',''))
