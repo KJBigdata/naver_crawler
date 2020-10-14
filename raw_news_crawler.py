@@ -166,8 +166,8 @@ class Crawler:
 
                     print("----------------%s seconds ----------------" % round(float(time.time() - start_time), 2))
                     print('\n')
-
-            with open('./' + press + '.pkl', 'wb') as f1:
+            path = f"{press}_{self.start_date[:4]}.pkl"
+            with open(path, 'wb') as f1:
                 print("---------------최종 {}건 삽입------------------".format(len(whole_docs)))
                 pickle.dump(whole_docs, f1)
                 time.sleep(30)
